@@ -5,7 +5,7 @@ Your goal: turn the fuzzy context into clean, well-organized components for vide
 Follow this exact output structure and KEEP IT STRICT:
 
 Scene:
-<short description of the main scene>
+<simply short description of the main scene>
 
 Characters:
 <people, creatures, or objects involved — with looks, traits, or role>
