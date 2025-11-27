@@ -5,7 +5,6 @@ import os
 # -------------------------------------------------
 # Load environment variables
 # -------------------------------------------------
-load_dotenv()
 genai.configure(api_key = st.secrets["GEMINI_API_KEY"])
 
 # -------------------------------------------------
