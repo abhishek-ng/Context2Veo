@@ -9,6 +9,10 @@ import os
 load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
 
+if not groq_api_key:
+    st.error("GROQ_API_KEY is missing in .env file!")
+    st.stop()
+
 client = Groq(api_key=groq_api_key)
 
 # -------------------------------------------------
@@ -21,21 +25,17 @@ extractor_template = load_prompt("prompts/extractor.txt")
 enhancer_template = load_prompt("prompts/enhancer.txt")
 assembler_template = load_prompt("prompts/assembler.txt")
 
-# Groq model name (choose one)
-MODEL_NAME = "llama-3.1-70b-versatile"   # Fast + strong
-
 
 # -------------------------------------------------
-# Helper to call Groq models
+# Groq LLM Helper function
 # -------------------------------------------------
 def groq_generate(prompt: str) -> str:
-    """Send prompt to Groq and return text."""
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
+    completion = client.chat.completions.create(
+        model="mixtral-8x7b-32768",   # or "llama3-70b-8192"
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
+        temperature=0.6,
     )
-    return response.choices[0].message.content
+    return completion.choices[0].message["content"]
 
 
 # -------------------------------------------------
@@ -43,7 +43,7 @@ def groq_generate(prompt: str) -> str:
 # -------------------------------------------------
 st.set_page_config(page_title="Context2Veo - Prompt Generator", layout="wide")
 
-st.title("🎬 Context2Veo — Video Prompt Generator (Groq)")
+st.title("🎬 Context2Veo — Video Prompt Generator (Groq Edition)")
 st.write("Convert a simple idea into a cinematic prompt ready for Veo.")
 
 
@@ -61,17 +61,14 @@ generate_btn = st.button("Generate Veo Prompt 🚀")
 # Logic: 3-step transformation pipeline
 # -------------------------------------------------
 def step_extract(context_text):
-    """Step 1: Convert raw context → structured details."""
     prompt = extractor_template.replace("{{context}}", context_text)
     return groq_generate(prompt)
 
 def step_enhance(details_text):
-    """Step 2: Expand details with cinematic clarity."""
     prompt = enhancer_template.replace("{{details}}", details_text)
     return groq_generate(prompt)
 
 def step_assemble(enhanced_text):
-    """Step 3: Create final Veo-ready video prompt."""
     prompt = assembler_template.replace("{{enhanced}}", enhanced_text)
     return groq_generate(prompt)
 
@@ -97,12 +94,12 @@ if generate_btn:
     # Display results
     # -------------------------------------------------
     st.subheader("🧩 Extracted Details")
-    st.code(extracted, language="markdown")
+    st.code(extracted)
 
     st.subheader("✨ Enhanced Version")
-    st.code(enhanced, language="markdown")
+    st.code(enhanced)
 
     st.subheader("🎥 Final Veo Prompt")
-    st.code(final_prompt, language="markdown")
+    st.code(final_prompt)
 
     st.success("Done! Copy your final Veo prompt above.")
