@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from groq import Groq
 from dotenv import load_dotenv
 import os
 
@@ -7,7 +7,9 @@ import os
 # Load environment variables
 # -------------------------------------------------
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+groq_api_key = os.getenv("GROQ_API_KEY")
+
+client = Groq(api_key=groq_api_key)
 
 # -------------------------------------------------
 # Helper: Load text templates
@@ -19,15 +21,29 @@ extractor_template = load_prompt("prompts/extractor.txt")
 enhancer_template = load_prompt("prompts/enhancer.txt")
 assembler_template = load_prompt("prompts/assembler.txt")
 
-# Gemini Model
-model = genai.GenerativeModel("models/gemini-2.5-pro")
+# Groq model name (choose one)
+MODEL_NAME = "llama-3.1-70b-versatile"   # Fast + strong
+
+
+# -------------------------------------------------
+# Helper to call Groq models
+# -------------------------------------------------
+def groq_generate(prompt: str) -> str:
+    """Send prompt to Groq and return text."""
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+    )
+    return response.choices[0].message.content
+
 
 # -------------------------------------------------
 # Streamlit UI
 # -------------------------------------------------
 st.set_page_config(page_title="Context2Veo - Prompt Generator", layout="wide")
 
-st.title("🎬 Context2Veo — Video Prompt Generator")
+st.title("🎬 Context2Veo — Video Prompt Generator (Groq)")
 st.write("Convert a simple idea into a cinematic prompt ready for Veo.")
 
 
@@ -47,20 +63,17 @@ generate_btn = st.button("Generate Veo Prompt 🚀")
 def step_extract(context_text):
     """Step 1: Convert raw context → structured details."""
     prompt = extractor_template.replace("{{context}}", context_text)
-    result = model.generate_content(prompt)
-    return result.text.strip()
+    return groq_generate(prompt)
 
 def step_enhance(details_text):
     """Step 2: Expand details with cinematic clarity."""
     prompt = enhancer_template.replace("{{details}}", details_text)
-    result = model.generate_content(prompt)
-    return result.text.strip()
+    return groq_generate(prompt)
 
 def step_assemble(enhanced_text):
     """Step 3: Create final Veo-ready video prompt."""
     prompt = assembler_template.replace("{{enhanced}}", enhanced_text)
-    result = model.generate_content(prompt)
-    return result.text.strip()
+    return groq_generate(prompt)
 
 
 # -------------------------------------------------
