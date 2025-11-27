@@ -7,7 +7,7 @@ import google.generativeai as genai
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 # Choose model (best for creative prompt generation)
-MODEL = "models/gemini-2.0-pro-exp"   # or "models/gemini-2.0-flash-thinking-exp"
+MODEL = "models/gemini-2.5-pro"   # or "models/gemini-2.0-flash-thinking-exp"
 
 # --------------------------------------
 # Helper function: generate prompt sequence
