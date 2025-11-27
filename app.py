@@ -20,7 +20,7 @@ enhancer_template = load_prompt("prompts/enhancer.txt")
 assembler_template = load_prompt("prompts/assembler.txt")
 
 # Gemini Model
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("models/gemini-2.5-pro")
 
 # -------------------------------------------------
 # Streamlit UI
