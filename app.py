@@ -77,12 +77,6 @@ if generate_btn:
         st.error("Please enter some context.")
         st.stop()
 
-    with st.spinner("Extracting details..."):
-        extracted = step_extract(context)
-
-    with st.spinner("Enhancing scene..."):
-        enhanced = step_enhance(extracted)
-
     with st.spinner("Building final Veo prompt..."):
         final_prompt = step_assemble(enhanced)
 
