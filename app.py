@@ -109,10 +109,10 @@ if generate_btn:
     st.subheader("🎞️ Generating Video with Wan 2.1...")
 
     with st.spinner("Generating video (this takes ~20–40 seconds)..."):
-        video_bytes = hf_client.text_to_video(
-            final_prompt,
-            model="Wan-AI/Wan2.1-T2V-14B",
-        )
+        video = client.text_to_video(
+                    prompt=final_prompt,
+                    model="stabilityai/stable-video-diffusion-text2vid",
+                )
 
     st.video(video_bytes)
     st.success("Video generated successfully!")
