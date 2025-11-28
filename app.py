@@ -3,13 +3,15 @@ import google.generativeai as genai
 from huggingface_hub import InferenceClient
 
 # -------------------------------------------------
-# Load API Keys from Streamlit Secrets
+# Load API Keys
 # -------------------------------------------------
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 HF_TOKEN = st.secrets["HF_TOKEN"]
 
-# HuggingFace Client (NO PROVIDER)
-hf_client = InferenceClient(token=HF_TOKEN)
+hf_client = InferenceClient(
+    "Tencent-Hunyuan/HunyuanVideo",
+    token=HF_TOKEN,
+)
 
 MODEL_NAME = "models/gemini-2.5-pro"
 
@@ -23,90 +25,67 @@ extractor_template = load_prompt("prompts/extractor.txt")
 enhancer_template = load_prompt("prompts/enhancer.txt")
 assembler_template = load_prompt("prompts/assembler.txt")
 
+
 # -------------------------------------------------
-# Gemini Text Generation Helper
+# Gemini Text Generation
 # -------------------------------------------------
-def gemini_generate(prompt: str) -> str:
+def gemini_generate(prompt: str):
     model = genai.GenerativeModel(MODEL_NAME)
     response = model.generate_content(prompt)
     return response.text
 
+
 # -------------------------------------------------
-# 3-Step Prompt Pipeline
+# Steps
 # -------------------------------------------------
 def step_extract(context_text):
-    prompt = extractor_template.replace("{{context}}", context_text)
-    return gemini_generate(prompt)
+    return gemini_generate(extractor_template.replace("{{context}}", context_text))
 
 def step_enhance(details_text):
-    prompt = enhancer_template.replace("{{details}}", details_text)
-    return gemini_generate(prompt)
+    return gemini_generate(enhancer_template.replace("{{details}}", details_text))
 
 def step_assemble(enhanced_text):
-    prompt = assembler_template.replace("{{enhanced}}", enhanced_text)
-    return gemini_generate(prompt)
+    return gemini_generate(assembler_template.replace("{{enhanced}}", enhanced_text))
+
 
 # -------------------------------------------------
-# Streamlit UI
+# Streamlit
 # -------------------------------------------------
-st.set_page_config(page_title="Gemini → SVD Video Generator", layout="wide")
+st.set_page_config(page_title="Gemini → HunyuanVideo", layout="wide")
 
-st.title("🎬 Gemini Prompt Generator + Stable Video Diffusion Creator")
-st.write("Give context → generate cinematic prompt → auto-create video using Stable Video Diffusion.")
+st.title("🎬 Gemini Prompt Generator + Hunyuan Video Creator")
 
-context = st.text_area(
-    "Describe your idea",
-    placeholder="Example: A peaceful village morning with fog, birds, and a slow camera pan...",
-    height=150
-)
-
+context = st.text_area("Enter your idea", height=150)
 generate_btn = st.button("Generate Prompt + Video 🚀")
 
-# -------------------------------------------------
-# Execution
-# -------------------------------------------------
 if generate_btn:
 
     if not context.strip():
-        st.error("Please enter some context.")
+        st.error("Enter context first.")
         st.stop()
 
-    # -------- Step 1 --------
-    with st.spinner("Extracting structured details..."):
+    with st.spinner("Extracting..."):
         extracted = step_extract(context)
 
-    # -------- Step 2 --------
-    with st.spinner("Enhancing cinematic richness..."):
+    with st.spinner("Enhancing..."):
         enhanced = step_enhance(extracted)
 
-    # -------- Step 3 --------
-    with st.spinner("Building final cinematic prompt..."):
+    with st.spinner("Finalizing prompt..."):
         final_prompt = step_assemble(enhanced)
 
-    # Show prompt pipeline
-    st.subheader("🧩 Extracted Details")
+    st.subheader("🧩 Extracted")
     st.code(extracted)
 
-    st.subheader("✨ Enhanced Version")
+    st.subheader("✨ Enhanced")
     st.code(enhanced)
 
-    st.subheader("🎥 Final Video Prompt")
+    st.subheader("🎥 Final Prompt")
     st.code(final_prompt)
 
-    st.success("Prompt generation complete!")
+    st.subheader("🎞 Generating Video (Hunyuan)...")
 
-    # -------------------------------------------------
-    # Generate Video (Stable Video Diffusion)
-    # -------------------------------------------------
-    st.subheader("🎞️ Generating Video with Stable Video Diffusion...")
-
-    with st.spinner("Creating video... This may take 20–40 seconds."):
-
-        # Text → Video
-        video_bytes = hf_client.text_to_video(
-            prompt=final_prompt,
-            model="stabilityai/stable-video-diffusion-text2vid",
-        )
+    with st.spinner("Rendering video..."):
+        video_bytes = hf_client.text_to_video(final_prompt)
 
     st.video(video_bytes)
-    st.success("Video generated successfully!")
+    st.success("Video created successfully!")
