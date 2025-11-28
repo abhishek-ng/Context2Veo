@@ -1,14 +1,20 @@
 import streamlit as st
 import google.generativeai as genai
+from huggingface_hub import InferenceClient
 
 # -------------------------------------------------
-# Load API key from Streamlit Secrets
+# Load API keys from Streamlit Secrets
 # -------------------------------------------------
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+HF_TOKEN = st.secrets["HF_TOKEN"]
 
-# Choose model (Gemini best for reasoning + generation)
+# HuggingFace client (Novita provider)
+hf_client = InferenceClient(
+    provider="novita",
+    api_key=HF_TOKEN,
+)
+
 MODEL_NAME = "models/gemini-2.5-pro"
-
 
 # -------------------------------------------------
 # Helper: Load text templates
@@ -25,71 +31,88 @@ assembler_template = load_prompt("prompts/assembler.txt")
 # Helper to call Gemini model
 # -------------------------------------------------
 def gemini_generate(prompt: str) -> str:
-    """Send prompt to Gemini and return its text output."""
     model = genai.GenerativeModel(MODEL_NAME)
     response = model.generate_content(prompt)
     return response.text
 
 
 # -------------------------------------------------
+# 3-STEP PIPELINE
+# -------------------------------------------------
+def step_extract(context_text):
+    prompt = extractor_template.replace("{{context}}", context_text)
+    return gemini_generate(prompt)
+
+def step_enhance(details_text):
+    prompt = enhancer_template.replace("{{details}}", details_text)
+    return gemini_generate(prompt)
+
+def step_assemble(enhanced_text):
+    prompt = assembler_template.replace("{{enhanced}}", enhanced_text)
+    return gemini_generate(prompt)
+
+
+# -------------------------------------------------
 # Streamlit UI
 # -------------------------------------------------
-st.set_page_config(page_title="Context2Veo - Prompt Generator (Gemini)", layout="wide")
+st.set_page_config(page_title="Gemini → Wan Video Generator", layout="wide")
 
-st.title("🎬 Context2Veo — Video Prompt Generator (Gemini)")
-st.write("Transform a simple idea into a cinematic Veo-ready prompt.")
+st.title("🎬 Gemini Prompt Generator + Wan 2.1 Video Creator")
+st.write("Give a context → generate cinematic prompt → create video with Wan 2.1.")
 
 
-# User input
 context = st.text_area(
     "Describe your idea (context)",
     placeholder="Example: A peaceful village morning with fog, birds, and a slow camera pan...",
     height=150
 )
 
-generate_btn = st.button("Generate Veo Prompt 🚀")
+generate_btn = st.button("Generate Prompt + Video 🚀")
 
 
 # -------------------------------------------------
-# Logic: 3-step transformation pipeline
-# -------------------------------------------------
-def step_extract(context_text):
-    """Step 1: Convert raw context → structured details."""
-    prompt = extractor_template.replace("{{context}}", context_text)
-    return gemini_generate(prompt)
-
-def step_enhance(details_text):
-    """Step 2: Expand details with cinematic clarity."""
-    prompt = enhancer_template.replace("{{details}}", details_text)
-    return gemini_generate(prompt)
-
-def step_assemble(enhanced_text):
-    """Step 3: Create final Veo-ready video prompt."""
-    prompt = assembler_template.replace("{{enhanced}}", enhanced_text)
-    return gemini_generate(prompt)
-
-
-# -------------------------------------------------
-# Run Pipeline on Button Click
+# Run Everything
 # -------------------------------------------------
 if generate_btn:
+
     if not context.strip():
         st.error("Please enter some context.")
         st.stop()
 
-    with st.spinner("Building final Veo prompt..."):
+    # -------- Step 1 --------
+    with st.spinner("Extracting structured details..."):
+        extracted = step_extract(context)
+
+    # -------- Step 2 --------
+    with st.spinner("Enhancing cinematic richness..."):
+        enhanced = step_enhance(extracted)
+
+    # -------- Step 3 --------
+    with st.spinner("Building final Veo-style prompt..."):
         final_prompt = step_assemble(enhanced)
 
-    # -------------------------------------------------
-    # Display results
-    # -------------------------------------------------
+    # Display outputs
     st.subheader("🧩 Extracted Details")
     st.code(extracted, language="markdown")
 
     st.subheader("✨ Enhanced Version")
     st.code(enhanced, language="markdown")
 
-    st.subheader("🎥 Final Veo Prompt")
+    st.subheader("🎥 Final Video Prompt (Gemini → Wan)")
     st.code(final_prompt, language="markdown")
 
-    st.success("Done! Your prompt is ready!")
+    st.success("Prompt generation complete!")
+
+    # -------------------------------------------------
+    # Generate Video (WAN T2V)
+    # -------------------------------------------------
+    st.subheader("🎞️ Generating Video with Wan 2.1...")
+
+    with st.spinner("Generating video (this takes ~20–40 seconds)..."):
+        video_bytes = hf_client.text_to_video(
+            final_prompt,
+            model="Wan-AI/Wan2.1-T2V-14B",
+        )
+
+    st.video(video_bytes)
+    st.success("Video generated successfully!")
