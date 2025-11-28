@@ -82,10 +82,3 @@ if generate_btn:
     st.subheader("🎥 Final Prompt")
     st.code(final_prompt)
 
-    st.subheader("🎞 Generating Video (Hunyuan)...")
-
-    with st.spinner("Rendering video..."):
-        video_bytes = hf_client.text_to_video(final_prompt)
-
-    st.video(video_bytes)
-    st.success("Video created successfully!")
