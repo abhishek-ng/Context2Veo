@@ -9,7 +9,7 @@ genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 HF_TOKEN = st.secrets["HF_TOKEN"]
 
 hf_client = InferenceClient(
-    "Tencent-Hunyuan/HunyuanVideo",
+    "ali-vilab/text-to-video-ms-1.7b",
     token=HF_TOKEN,
 )
 
