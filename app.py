@@ -1,101 +1,101 @@
 import streamlit as st
 import google.generativeai as genai
-import re
 
-# --------------------------------------
+# -------------------------------------------------
 # Load API key from Streamlit Secrets
-# --------------------------------------
+# -------------------------------------------------
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-MODEL = "models/gemini-2.5-pro"
+# Choose model (Gemini best for reasoning + generation)
+MODEL_NAME = "models/gemini-2.5-pro"
 
 
-# --------------------------------------
-# Helper: Generate full numbered prompt sequence
-# --------------------------------------
-def generate_prompt_sequence(context, num_prompts):
-    system_prompt = f"""
-    You are a cinematic prompt generator.
+# -------------------------------------------------
+# Helper: Load text templates
+# -------------------------------------------------
+def load_prompt(path):
+    return open(path, "r", encoding="utf-8").read()
 
-    Task:
-    - Expand this short context: "{context}"
-    - Generate EXACTLY {num_prompts} cinematic video prompts.
-    - Each prompt is a new shot of a long cinematic sequence.
-    - Use highly visual descriptions, camera motion, lighting, mood.
-
-    Format STRICTLY like:
-    1. <prompt>
-    2. <prompt>
-    ...
-    {num_prompts}. <prompt>
-    """
-
-    model = genai.GenerativeModel(MODEL)
-    result = model.generate_content(system_prompt)
-    return result.text
+extractor_template = load_prompt("prompts/extractor.txt")
+enhancer_template = load_prompt("prompts/enhancer.txt")
+assembler_template = load_prompt("prompts/assembler.txt")
 
 
-# --------------------------------------
-# Helper: Split generated text into list of prompts
-# --------------------------------------
-def split_numbered_prompts(text):
-    """
-    Extract prompts that follow the pattern:
-    1. something
-    2. something
-    3. something
-    """
-
-    pattern = r"\d+\.\s*(.+?)(?=\n\d+\.|\Z)"
-    matches = re.findall(pattern, text, flags=re.S)
-
-    # Clean whitespace
-    return [m.strip() for m in matches]
+# -------------------------------------------------
+# Helper to call Gemini model
+# -------------------------------------------------
+def gemini_generate(prompt: str) -> str:
+    """Send prompt to Gemini and return its text output."""
+    model = genai.GenerativeModel(MODEL_NAME)
+    response = model.generate_content(prompt)
+    return response.text
 
 
-# --------------------------------------
+# -------------------------------------------------
 # Streamlit UI
-# --------------------------------------
-st.set_page_config(page_title="Prompt Sequencer", layout="wide")
+# -------------------------------------------------
+st.set_page_config(page_title="Context2Veo - Prompt Generator (Gemini)", layout="wide")
 
-st.title("🎬 Multi-Shot Video Prompt Generator")
-st.write("Generate multiple cinematic prompts for Veo from a tiny idea.")
+st.title("🎬 Context2Veo — Video Prompt Generator (Gemini)")
+st.write("Transform a simple idea into a cinematic Veo-ready prompt.")
 
-context = st.text_input(
-    "Enter your short context (4–5 words)",
-    placeholder="Example: futuristic desert city"
+
+# User input
+context = st.text_area(
+    "Describe your idea (context)",
+    placeholder="Example: A peaceful village morning with fog, birds, and a slow camera pan...",
+    height=150
 )
 
-num_prompts = st.slider("Number of prompts", 5, 40, 12)
+generate_btn = st.button("Generate Veo Prompt 🚀")
 
-generate_btn = st.button("Generate Prompt Sequence 🚀")
 
-# --------------------------------------
-# Run when clicked
-# --------------------------------------
+# -------------------------------------------------
+# Logic: 3-step transformation pipeline
+# -------------------------------------------------
+def step_extract(context_text):
+    """Step 1: Convert raw context → structured details."""
+    prompt = extractor_template.replace("{{context}}", context_text)
+    return gemini_generate(prompt)
+
+def step_enhance(details_text):
+    """Step 2: Expand details with cinematic clarity."""
+    prompt = enhancer_template.replace("{{details}}", details_text)
+    return gemini_generate(prompt)
+
+def step_assemble(enhanced_text):
+    """Step 3: Create final Veo-ready video prompt."""
+    prompt = assembler_template.replace("{{enhanced}}", enhanced_text)
+    return gemini_generate(prompt)
+
+
+# -------------------------------------------------
+# Run Pipeline on Button Click
+# -------------------------------------------------
 if generate_btn:
     if not context.strip():
-        st.error("Please enter context first.")
+        st.error("Please enter some context.")
         st.stop()
 
-    with st.spinner("Generating prompt sequence..."):
-        full_text = generate_prompt_sequence(context, num_prompts)
+    with st.spinner("Extracting details..."):
+        extracted = step_extract(context)
 
-    # Split into individual prompts
-    prompt_list = split_numbered_prompts(full_text)
+    with st.spinner("Enhancing scene..."):
+        enhanced = step_enhance(extracted)
 
-    st.success("Generated! Showing individual prompts below 👇")
+    with st.spinner("Building final Veo prompt..."):
+        final_prompt = step_assemble(enhanced)
 
-    # --------------------------------------
-    # UI: Show each prompt separately
-    # --------------------------------------
-    st.subheader("🎞️ Sequential Prompts")
+    # -------------------------------------------------
+    # Display results
+    # -------------------------------------------------
+    st.subheader("🧩 Extracted Details")
+    st.code(extracted, language="markdown")
 
-    for i, p in enumerate(prompt_list, start=1):
-        st.markdown(f"### 🎥 Shot {i}")
-        st.code(p, language="markdown")
-        st.divider()
+    st.subheader("✨ Enhanced Version")
+    st.code(enhanced, language="markdown")
 
-    # Show raw sequence too (optional)
-    st.subheader("🧾 Full Combined Output")
-    st.code(full_text, language="markdown")
+    st.subheader("🎥 Final Veo Prompt")
+    st.code(final_prompt, language="markdown")
+
+    st.success("Done! Your prompt is ready!")
