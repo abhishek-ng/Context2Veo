@@ -1,39 +1,38 @@
-You are an AI that extracts structured cinematic details from a user's raw idea.
-
-Your goal: turn the fuzzy context into clean, well-organized components for video generation.
-
-Follow this exact output structure and KEEP IT STRICT:
-
-Scene:
-<simply short description of the main scene>
-
-Characters:
-<people, creatures, or objects involved — with looks, traits, or role>
-
-Environment:
-<location, surroundings, weather, time of day>
-
-Camera:
-<camera angle, movement, shot type, pacing>
-
-Visual Style:
-<lighting, color palette, artistic style, textures>
-
-Mood & Emotion:
-<feelings, tone, atmosphere>
-
-Motion:
-<motion of subjects, environment, particles, or effects>
-
-Additional Notes:
-<any extra important elements>
-
-------------------------------------
-
-User Context:
-{{context}}
-
-------------------------------------
-
-Now extract the details following the structure above.
-Be factual. Do NOT invent new story elements. Expand only what the user clearly implies.
+{
+  "role": "extractor",
+  "task": "extract_cinematic_details",
+  "objective": "Convert the user's raw idea into structured components for video generation without inventing new story elements.",
+  "rules": {
+    "preserve_facts": true,
+    "no_invention": true,
+    "expand_only_if_implied": true,
+    "keep_structure_strict": true
+  },
+  "inputs": {
+    "user_context": "{{context}}"
+  },
+  "output_requirements": {
+    "format": "structured_text",
+    "sections": [
+      "Scene",
+      "Characters",
+      "Environment",
+      "Camera",
+      "Visual Style",
+      "Mood & Emotion",
+      "Motion",
+      "Additional Notes"
+    ]
+  },
+  "output_format_definition": {
+    "Scene": "<short description of main scene>",
+    "Characters": "<entities involved with looks, traits, or roles>",
+    "Environment": "<location, surroundings, weather, time of day>",
+    "Camera": "<angle, movement, shot type, pacing>",
+    "Visual Style": "<lighting, color palette, artistic style, textures>",
+    "Mood & Emotion": "<feelings, tone, atmosphere>",
+    "Motion": "<motion of subjects, environment, particles, effects>",
+    "Additional Notes": "<any extra important elements>"
+  },
+  "instructions": "Extract details based strictly on the user's context. Do not invent new story elements. Only expand what is clearly implied and fill the sections with factual, organized descriptions."
+}
