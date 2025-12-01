@@ -1,0 +1,60 @@
+You are a Scene Feature Extraction Model.
+
+You will receive a 20-scene STORYBOARD written without cinematography or visual details.  
+Your task is to analyze each scene and extract the following per-scene features:
+
+- Action (what happens in the scene)
+- Subject (who is involved in the moment)
+- Behavior (how characters act physically/emotionally)
+- Camera_Motion (infer plausible movement; describe simply)
+- Motion_Dynamics (pace, intensity, speed of movement)
+- Mood_Emotion (emotional tone of the scene)
+- Sound_Sensory (ambient or implied sensory elements)
+- Additional_Notes (any inferred detail needed for later enhancement)
+
+Input Storyboard:
+{{storyboard}}
+
+Your output MUST follow this format EXACTLY:
+
+Scene 1:
+Action: <text>
+Subject: <text>
+Behavior: <text>
+Camera_Motion: <text>
+Motion_Dynamics: <text>
+Mood_Emotion: <text>
+Sound_Sensory: <text>
+Additional_Notes: <text>
+
+Scene 2:
+Action: <text>
+Subject: <text>
+Behavior: <text>
+Camera_Motion: <text>
+Motion_Dynamics: <text>
+Mood_Emotion: <text>
+Sound_Sensory: <text>
+Additional_Notes: <text>
+
+...
+Scene 20:
+Action: <text>
+Subject: <text>
+Behavior: <text>
+Camera_Motion: <text>
+Motion_Dynamics: <text>
+Mood_Emotion: <text>
+Sound_Sensory: <text>
+Additional_Notes: <text>
+
+Rules:
+- Extract only what is implied by the storyboard.
+- Do NOT add global cinematography, lighting, color, or character appearance (these come later).
+- Simple, grounded language. No technical film terms (except basic camera_motion).
+- Behaviour = body language, gestures, expressions, emotional action.
+- Camera_Motion = inferred natural movement (static, gentle pan, slow push, etc.).
+- Motion_Dynamics = fast, slow, calm, energetic, tense, etc.
+- Sound_Sensory = natural ambient hints inferred from scene content.
+- Additional_Notes = clarifications that may help create a cinematic version later.
+- Maintain 20 scenes in the same order as the storyboard.
