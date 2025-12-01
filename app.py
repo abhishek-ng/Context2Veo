@@ -1,6 +1,8 @@
 import streamlit as st
 import google.generativeai as genai
 from huggingface_hub import InferenceClient
+import json
+
 
 # -------------------------------------------------
 # Load API Keys
@@ -15,11 +17,13 @@ hf_client = InferenceClient(
 
 MODEL_NAME = "models/gemini-2.5-pro"
 
+
 # -------------------------------------------------
 # Load Prompt Templates
 # -------------------------------------------------
 def load_prompt(path):
     return open(path, "r", encoding="utf-8").read()
+
 
 extractor_template = load_prompt("prompts/extractor.txt")
 enhancer_template = load_prompt("prompts/enhancer.txt")
@@ -36,49 +40,92 @@ def gemini_generate(prompt: str):
 
 
 # -------------------------------------------------
-# Steps
+# Processing Steps
 # -------------------------------------------------
 def step_extract(context_text):
-    return gemini_generate(extractor_template.replace("{{context}}", context_text))
+    prompt = extractor_template.replace("{{context}}", context_text)
+    return gemini_generate(prompt)
+
 
 def step_enhance(details_text):
-    return gemini_generate(enhancer_template.replace("{{details}}", details_text))
+    prompt = enhancer_template.replace("{{details}}", details_text)
+    return gemini_generate(prompt)
+
 
 def step_assemble(enhanced_text):
-    return gemini_generate(assembler_template.replace("{{enhanced}}", enhanced_text))
+    prompt = assembler_template.replace("{{enhanced}}", enhanced_text)
+    raw_output = gemini_generate(prompt)
+
+    # -------------------------------------------------
+    # JSON ENFORCEMENT LAYER
+    # -------------------------------------------------
+    try:
+        # Direct JSON
+        parsed = json.loads(raw_output)
+        return json.dumps(parsed, indent=2)
+    except:
+        pass
+
+    # Try to extract JSON substring
+    try:
+        start = raw_output.index("{")
+        end = raw_output.rindex("}") + 1
+        json_str = raw_output[start:end]
+        parsed = json.loads(json_str)
+        return json.dumps(parsed, indent=2)
+    except:
+        pass
+
+    # Fallback: return raw
+    return raw_output
 
 
 # -------------------------------------------------
-# Streamlit
+# Streamlit UI
 # -------------------------------------------------
-st.set_page_config(page_title="Gemini → HunyuanVideo", layout="wide")
+st.set_page_config(
+    page_title="Context → JSON Prompt Generator",
+    layout="wide"
+)
 
-st.title("🎬 Gemini Prompt Generator + Hunyuan Video Creator")
+st.title("Context → JSON Prompt Generator")
 
-context = st.text_area("Enter your idea", height=150)
-generate_btn = st.button("Generate Prompt + Video 🚀")
+context = st.text_area("Enter your video idea / scene context:", height=150)
+generate_btn = st.button("Generate JSON Prompt")
+
 
 if generate_btn:
 
     if not context.strip():
-        st.error("Enter context first.")
+        st.error("Please enter some context first.")
         st.stop()
 
-    with st.spinner("Extracting..."):
+    # -----------------------------------------
+    # EXTRACTION
+    # -----------------------------------------
+    with st.spinner("Extracting structured details..."):
         extracted = step_extract(context)
 
-    with st.spinner("Enhancing..."):
+    # -----------------------------------------
+    # ENHANCEMENT
+    # -----------------------------------------
+    with st.spinner("Enhancing cinematic richness..."):
         enhanced = step_enhance(extracted)
 
-    with st.spinner("Finalizing prompt..."):
+    # -----------------------------------------
+    # FINAL ASSEMBLER → JSON
+    # -----------------------------------------
+    with st.spinner("Assembling final JSON prompt..."):
         final_prompt = step_assemble(enhanced)
 
-    st.subheader("🧩 Extracted")
+    # -----------------------------------------
+    # Display
+    # -----------------------------------------
+    st.subheader("🧩 Extracted Details")
     st.code(extracted)
 
-    st.subheader("✨ Enhanced")
+    st.subheader("✨ Enhanced Cinematic Details")
     st.code(enhanced)
 
-    st.subheader("🎥 Final Prompt")
-    st.code(final_prompt)
-
+    st.subheader("📦 Final JSON Prompt (Ready for Video Models)")
+    st.code(final_prompt, language="json")
