@@ -6,7 +6,7 @@ import json
 # Load API Keys
 # -------------------------------------------------
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-HF_TOKEN = st.secrets["HF_TOKEN"]
+# HF_TOKEN = st.secrets["HF_TOKEN"]
 
 '''
 # (Prepared for future video generation – not used yet in this file)
