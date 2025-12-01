@@ -1,3 +1,29 @@
+You MUST output valid JSON ONLY.
+Follow the schema below EXACTLY.
+Do NOT wrap in markdown. Do NOT add commentary. Do NOT change field names.
+
+{
+  "scene_summary": "<2-3 sentence overview of the scene>",
+  "full_paragraph": "<5-10 sentence cinematic description>",
+  "structured_sections": {
+    "Scene": "<final scene description>",
+    "Characters": "<final characters>",
+    "Environment": "<final environment>",
+    "Camera": "<final camera details>",
+    "Visual_Style": "<final lighting and color style>",
+    "Mood_Emotion": "<final emotional tone>",
+    "Motion": "<final motion details>",
+    "Additional_Notes": "<any refined extra notes>"
+  }
+}
+
+Enhanced Details Below:
+{{enhanced}}
+
+Assemble the enhanced details into the JSON structure above.
+Only fill the JSON. Do not output anything else.
+
+
 {
   "role": "assembler",
   "task": "assemble_final_video_prompt",
