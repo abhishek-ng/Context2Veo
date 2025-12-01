@@ -67,6 +67,7 @@ Into a **single 20-scene cinematic JSON**, perfect for text-to-video models.
 
 .
 ├── prompts/
+
 │ ├── story_bible.txt
 │ ├── extract_visual_style.txt
 │ ├── extract_shot_features.txt
