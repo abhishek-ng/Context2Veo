@@ -1,24 +1,35 @@
 You MUST output valid JSON ONLY.
-Follow the schema below EXACTLY.
-Do NOT wrap in markdown. Do NOT add commentary. Do NOT change field names.
+Do NOT wrap in markdown.
+Do NOT add extra commentary.
+Do NOT change field names.
+
+Follow this JSON schema EXACTLY:
 
 {
-  "scene_summary": "<2-3 sentence overview of the scene>",
-  "full_paragraph": "<5-10 sentence cinematic description>",
+  "scene_summary": "<2-3 sentence overview describing the scene in present tense>",
+  "full_paragraph": "<single cinematic paragraph (6-10 sentences) combining cinematography, subject, action, environment, style, lighting, mood, and motion>",
   "structured_sections": {
-    "Scene": "<final scene description>",
-    "Characters": "<final characters>",
-    "Environment": "<final environment>",
-    "Camera": "<final camera details>",
-    "Visual_Style": "<final lighting and color style>",
-    "Mood_Emotion": "<final emotional tone>",
-    "Motion": "<final motion details>",
-    "Additional_Notes": "<any refined extra notes>"
+    "Cinematography": "",
+    "Subject": "",
+    "Action": "",
+    "Context": "",
+    "Environment": "",
+    "Camera_Motion": "",
+    "Style_Ambiance": "",
+    "Lighting_Texture": "",
+    "Sound_Sensory": "",
+    "Mood_Emotion": "",
+    "Motion_Dynamics": "",
+    "Additional_Notes": ""
   }
 }
+
+------------------------------------
 
 Enhanced Details:
 {{enhanced}}
 
+------------------------------------
+
 Assemble the enhanced details into the JSON structure above.
-Only fill the JSON. Do not output anything else.
+Only output valid JSON. Nothing else.
