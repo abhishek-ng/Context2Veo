@@ -8,13 +8,13 @@ import json
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 # HF_TOKEN = st.secrets["HF_TOKEN"]
 
-'''
+
 # (Prepared for future video generation – not used yet in this file)
 #hf_client = InferenceClient(
 #    "ali-vilab/text-to-video-ms-1.7b",
 #    token=HF_TOKEN,
 #)
-'''
+
 MODEL_NAME = "models/gemini-2.5-pro"
 
 
