@@ -62,30 +62,7 @@ def step_enhance(details_text):
 
 def step_assemble(enhanced_text):
     prompt = assembler_template.replace("{{enhanced}}", enhanced_text)
-    raw_output = gemini_generate(prompt)
-
-    # -------------------------------------------------
-    # JSON ENFORCEMENT LAYER
-    # -------------------------------------------------
-    try:
-        # Direct JSON
-        parsed = json.loads(raw_output)
-        return json.dumps(parsed, indent=2)
-    except:
-        pass
-
-    # Try to extract JSON substring
-    try:
-        start = raw_output.index("{")
-        end = raw_output.rindex("}") + 1
-        json_str = raw_output[start:end]
-        parsed = json.loads(json_str)
-        return json.dumps(parsed, indent=2)
-    except:
-        pass
-
-    # Fallback: return raw
-    return raw_output
+    return gemini_generate(prompt)
 
 
 # -------------------------------------------------
