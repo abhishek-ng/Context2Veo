@@ -1,48 +1,53 @@
 import streamlit as st
 import google.generativeai as genai
 import json
+from pathlib import Path
 
 # -------------------------------------------------
-# Load API Keys
+# Config
 # -------------------------------------------------
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-# HF_TOKEN = st.secrets["HF_TOKEN"]
-
-
-# (Prepared for future video generation – not used yet in this file)
-#hf_client = InferenceClient(
-#    "ali-vilab/text-to-video-ms-1.7b",
-#    token=HF_TOKEN,
-#)
-
 MODEL_NAME = "models/gemini-2.5-pro"
+
+# Expect: st.secrets["GEMINI_API_KEY"] set in Streamlit
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 
 # -------------------------------------------------
 # Helpers
 # -------------------------------------------------
-def load_prompt(path: str) -> str:
-    """Load a prompt template from file."""
-    with open(path, "r", encoding="utf-8") as f:
+def load_prompt(relative_path: str) -> str:
+    """
+    Load a prompt template from the prompts/ directory
+    using a path relative to the project root.
+    """
+    base_dir = Path(__file__).resolve().parent
+    full_path = base_dir / relative_path
+    with open(full_path, "r", encoding="utf-8") as f:
         return f.read()
 
 
-def gemini_generate(prompt: str) -> str:
-    """Call Gemini with JSON-only response."""
+def gemini_generate(prompt: str, json_mode: bool = False) -> str:
+    """
+    Call Gemini with the given prompt.
+    If json_mode=True, request JSON mime type.
+    """
     model = genai.GenerativeModel(MODEL_NAME)
 
-    response = model.generate_content(
-        prompt,
-        generation_config={
-            "response_mime_type": "application/json"
-        }
-    )
-    # Gemini returns a JSON string here
-    return response.text
+    if json_mode:
+        resp = model.generate_content(
+            prompt,
+            generation_config={"response_mime_type": "application/json"},
+        )
+    else:
+        resp = model.generate_content(prompt)
+
+    return resp.text
 
 
 def pretty_json(text: str) -> str:
-    """Prettify a JSON string for display; fallback to raw if parsing fails."""
+    """
+    Try to pretty-print JSON; if it fails, return original text.
+    """
     try:
         obj = json.loads(text)
         return json.dumps(obj, indent=2, ensure_ascii=False)
@@ -51,111 +56,90 @@ def pretty_json(text: str) -> str:
 
 
 # -------------------------------------------------
-# Load Prompt Templates
+# Load prompt templates
 # -------------------------------------------------
-# Long-form pipeline templates
 story_bible_template = load_prompt("prompts/story_bible.txt")
-shot_list_template = load_prompt("prompts/shot_list_generator.txt")
-shot_enhancer_template = load_prompt("prompts/shot_enhancer.txt")
-long_video_assembler_template = load_prompt("prompts/long_video_assembler.txt")
-
-# (Optional: legacy single-shot templates if you still want them)
-# extractor_template = load_prompt("prompts/extractor.txt")
-# enhancer_template = load_prompt("prompts/enhancer.txt")
-# assembler_template = load_prompt("prompts/assembler.txt")
+extract_visual_style_template = load_prompt("prompts/extract_visual_style.txt")
+extract_shot_features_template = load_prompt("prompts/extract_shot_features.txt")
+merge_global_template = load_prompt("prompts/merge_global.txt")
 
 
 # -------------------------------------------------
-# Processing Steps — Long-form Pipeline
+# Pipeline steps
 # -------------------------------------------------
-def step_story_bible(context_text: str) -> str:
+def step_storyboard(context_text: str) -> str:
     """
-    Phase 1: Generate GLOBAL STORY BIBLE from user context.
-    Returns: JSON string.
+    Step 1: From raw context → 20-scene storyboard (plain text).
+    Uses story_bible.txt (which we’re using as storyboard writer).
     """
     prompt = story_bible_template.replace("{{context}}", context_text)
-    return gemini_generate(prompt)
+    return gemini_generate(prompt, json_mode=False)
 
 
-def step_shot_list(story_bible_json: str) -> str:
+def step_extract_visual_style(storyboard_text: str) -> str:
     """
-    Phase 2: Generate SHOT LIST (sequence of 24 shots).
-    Returns: JSON string.
+    Step 2: From storyboard → global visual style + characters (JSON).
+    Uses extract_visual_style.txt.
     """
-    prompt = shot_list_template.replace("{{bible}}", story_bible_json)
-    return gemini_generate(prompt)
+    prompt = extract_visual_style_template.replace("{{storyboard}}", storyboard_text)
+    return gemini_generate(prompt, json_mode=True)
 
 
-def step_expand_shots(shot_list_json: str, story_bible_json: str) -> str:
+def step_extract_shot_features(storyboard_text: str) -> str:
     """
-    Phase 3: Expand each shot into a full cinematic prompt.
-    Returns: JSON string (array of shots).
+    Step 3: From storyboard → per-scene features (plain structured text).
+    Uses extract_shot_features.txt.
+    """
+    prompt = extract_shot_features_template.replace("{{storyboard}}", storyboard_text)
+    return gemini_generate(prompt, json_mode=False)
+
+
+def step_merge_global(global_json_text: str, scene_features_text: str) -> str:
+    """
+    Step 4: Merge global visual style + per-scene features
+    into a final JSON with 20 scenes, each including:
+      - action, subject, behavior, camera_motion, motion_dynamics,
+        mood_emotion, sound_sensory, additional_notes
+      - cinematography_style, lighting_style, color_ambience, characters
+
+    Uses merge_global.txt.
     """
     prompt = (
-        shot_enhancer_template
-        .replace("{{bible}}", story_bible_json)
-        .replace("{{shots}}", shot_list_json)
+        merge_global_template
+        .replace("{{global}}", global_json_text)
+        .replace("{{scenes}}", scene_features_text)
     )
-    return gemini_generate(prompt)
-
-
-def step_long_assemble(expanded_shots_json: str) -> str:
-    """
-    Phase 4: Assemble expanded shots into MASTER long-video JSON.
-    Returns: JSON string.
-    """
-    prompt = long_video_assembler_template.replace("{{expanded}}", expanded_shots_json)
-    return gemini_generate(prompt)
-
-
-# -------------------------------------------------
-# (Optional) Placeholder for future video generation
-# -------------------------------------------------
-# def generate_video_clip_from_prompt(prompt: str):
-#     """
-#     Example placeholder for calling the HF text-to-video model.
-#     You can adapt this to the exact API signature you prefer.
-#     """
-#     result = hf_client.post(json={"inputs": prompt})
-#     # handle result (e.g., save as file) here
-#     return result
+    return gemini_generate(prompt, json_mode=True)
 
 
 # -------------------------------------------------
 # Streamlit UI
 # -------------------------------------------------
 st.set_page_config(
-    page_title="Long-form Video Prompt Generator",
-    layout="wide"
+    page_title="Multi-Shot Cinematic Prompt Builder",
+    layout="wide",
 )
 
-st.title("🎬 Context → 2-Min Multi-Shot Video Prompt Generator")
+st.title("🎬 Context → 20-Scene Cinematic JSON Prompt")
 
 st.markdown(
     """
-Turn a single **story context** into a full **2-minute cinematic shot sequence**.
+This app turns a single story **context** into a structured **20-scene cinematic plan**:
 
-Pipeline:
-1. Build a **Story Bible** (characters, style, rules)  
-2. Generate a sequential **Shot List** (24 shots)  
-3. Expand each shot into a **cinematic video prompt**  
-4. Assemble everything into a **Master JSON** ready for text-to-video models  
+1. **Storyboard** (20 scenes, 2–3 lines each)  
+2. **Global visual style & character appearance**  
+3. **Per-scene features** (action, behavior, mood, etc.)  
+4. **Merged JSON** with all features for every scene  
 """
 )
 
 context = st.text_area(
-    "Enter your video idea / scene context:",
+    "Enter your story context:",
     height=160,
-    placeholder="Example: In his cluttered study, Isaac Newton contemplates the falling apple..."
+    placeholder="Example: A young boy practices hockey alone on a frozen pond, preparing for his first big tournament...",
 )
 
-col1, col2 = st.columns([1, 2])
-
-with col1:
-    generate_btn = st.button("Generate Long-Form JSON")
-
-with col2:
-    st.info("Each shot is ~8 seconds. 24 shots ≈ 2 minutes.")
+generate_btn = st.button("Generate 20-Scene Cinematic JSON")
 
 
 if generate_btn:
@@ -164,48 +148,40 @@ if generate_btn:
         st.stop()
 
     # -----------------------------------------
-    # PHASE 1 — STORY BIBLE
+    # Step 1 — Storyboard
     # -----------------------------------------
-    with st.spinner("📘 Building global story bible..."):
-        story_bible_json = step_story_bible(context)
-        story_bible_pretty = pretty_json(story_bible_json)
+    with st.spinner("✏️ Generating 20-scene storyboard..."):
+        storyboard = step_storyboard(context)
 
     # -----------------------------------------
-    # PHASE 2 — SHOT LIST
+    # Step 2 — Global visual style
     # -----------------------------------------
-    with st.spinner("🎞️ Generating sequential shot list..."):
-        shot_list_json = step_shot_list(story_bible_json)
-        shot_list_pretty = pretty_json(shot_list_json)
+    with st.spinner("🎨 Extracting global visual style & characters..."):
+        global_style_json = step_extract_visual_style(storyboard)
+        global_style_pretty = pretty_json(global_style_json)
 
     # -----------------------------------------
-    # PHASE 3 — CINEMATIC EXPANSION
+    # Step 3 — Per-scene features
     # -----------------------------------------
-    with st.spinner("🎬 Expanding each shot into cinematic prompts..."):
-        expanded_shots_json = step_expand_shots(shot_list_json, story_bible_json)
-        expanded_shots_pretty = pretty_json(expanded_shots_json)
+    with st.spinner("🧩 Extracting per-scene features..."):
+        scene_features_text = step_extract_shot_features(storyboard)
 
     # -----------------------------------------
-    # PHASE 4 — MASTER LONG-VIDEO JSON
+    # Step 4 — Merge into final per-scene JSON
     # -----------------------------------------
-    with st.spinner("📦 Assembling final 2-minute video JSON..."):
-        master_json = step_long_assemble(expanded_shots_json)
-        master_json_pretty = pretty_json(master_json)
+    with st.spinner("📦 Merging global style into all 20 scenes..."):
+        merged_json = step_merge_global(global_style_json, scene_features_text)
+        merged_pretty = pretty_json(merged_json)
 
     # -----------------------------------------
-    # Display Results
+    # Display sections
     # -----------------------------------------
     st.markdown("---")
 
-    st.subheader("📘 Story Bible (Global Consistency)")
-    st.code(story_bible_pretty, language="json")
+    st.subheader("📝 Storyboard (20 Scenes)")
+    st.text(storyboard)
 
-    st.subheader("🎞️ Shot List (Storyboard of 24 Shots)")
-    st.code(shot_list_pretty, language="json")
+    st.subheader("🎬 Final 20-Scene Cinematic JSON (with global consistency)")
+    st.code(merged_pretty, language="json")
 
-    st.subheader("🎬 Expanded Cinematic Shots (Per-Shot Prompts)")
-    st.code(expanded_shots_pretty, language="json")
-
-    st.subheader("📦 Final Master JSON (Ready for Text-to-Video Models)")
-    st.code(master_json_pretty, language="json")
-
-    st.success("Done! You can now use each per-shot prompt with your text-to-video model and stitch the clips together.")
+    st.success("Done! Each scene now contains both local actions and global cinematic style.")
