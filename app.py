@@ -35,8 +35,16 @@ assembler_template = load_prompt("prompts/assembler.txt")
 # -------------------------------------------------
 def gemini_generate(prompt: str):
     model = genai.GenerativeModel(MODEL_NAME)
-    response = model.generate_content(prompt)
+
+    response = model.generate_content(
+        prompt,
+        generation_config={
+            "response_mime_type": "application/json"
+        }
+    )
+
     return response.text
+
 
 
 # -------------------------------------------------
