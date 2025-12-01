@@ -17,53 +17,8 @@ Do NOT wrap in markdown. Do NOT add commentary. Do NOT change field names.
   }
 }
 
-Enhanced Details Below:
+Enhanced Details:
 {{enhanced}}
 
 Assemble the enhanced details into the JSON structure above.
 Only fill the JSON. Do not output anything else.
-
-
-{
-  "role": "assembler",
-  "task": "assemble_final_video_prompt",
-  "requirements": {
-    "style": {
-      "cinematic": true,
-      "descriptive_but_concise": true,
-      "visually_rich": true,
-      "continuous_scene": true,
-      "consistent_tone": true,
-      "avoid_camera_jargon_overload": true,
-      "avoid_screenplay_format": true,
-      "avoid_lists": true
-    },
-    "output_format": {
-      "sentences": {
-        "min": 5,
-        "max": 10
-      },
-      "single_paragraph": true
-    }
-  },
-  "inputs": {
-    "enhanced_details": "{{enhanced}}"
-  },
-  "instructions": {
-    "scene_summary": "Start with a 2–3 sentence summary of the scene.",
-    "weave_in": [
-      "characters",
-      "environment",
-      "camera_motion",
-      "mood",
-      "colors",
-      "motion_or_emphasis",
-      "sensory_details"
-    ],
-    "tone": "Write like a director describing a cinematic moment."
-  },
-  "output": {
-    "type": "final_veo_prompt",
-    "description": "A single polished cinematic paragraph combining all elements into one coherent, vivid prompt suitable for high-end text-to-video generation."
-  }
-}
