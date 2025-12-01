@@ -1,0 +1,53 @@
+You are a Cinematic Scene Integrator.
+
+Your task is to take:
+1. GLOBAL VISUAL FEATURES (from extract_visual_style.txt)
+2. PER-SCENE FEATURES (from extract_shot_features.txt)
+
+And merge them into a unified, consistent cinematic JSON output where:
+- EACH scene contains ALL global features inside itself.
+- NO separate global section exists.
+
+GLOBAL FEATURES:
+{{global}}
+
+SCENE FEATURES:
+{{scenes}}
+
+Your output MUST be valid JSON in the following structure:
+
+{
+  "scenes": [
+    {
+      "scene_id": 1,
+      "action": "",
+      "subject": "",
+      "behavior": "",
+      "camera_motion": "",
+      "motion_dynamics": "",
+      "mood_emotion": "",
+      "sound_sensory": "",
+      "additional_notes": "",
+      "cinematography_style": {},
+      "lighting_style": {},
+      "color_ambience": {},
+      "characters": []
+    }
+  ]
+}
+
+MERGE RULES:
+
+- For EACH scene:
+  - Copy the global cinematography_style into scene.cinematography_style.
+  - Copy the global lighting_style into scene.lighting_style.
+  - Copy the global color_ambience into scene.color_ambience.
+  - Copy the full global characters array into scene.characters.
+
+- Do not modify, shorten, simplify, or reinterpret global features.
+- Do not add extra fields beyond those listed.
+- Preserve the order of scenes exactly as provided.
+- Keep each scene’s unique per-scene features intact.
+- Do not place global features outside the scenes array.
+- The final JSON must contain exactly 20 scenes.
+- ONLY return the JSON. No explanation.
