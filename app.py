@@ -10,10 +10,10 @@ genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 '''
 # (Prepared for future video generation – not used yet in this file)
-hf_client = InferenceClient(
-    "ali-vilab/text-to-video-ms-1.7b",
-    token=HF_TOKEN,
-)
+#hf_client = InferenceClient(
+#    "ali-vilab/text-to-video-ms-1.7b",
+#    token=HF_TOKEN,
+#)
 '''
 MODEL_NAME = "models/gemini-2.5-pro"
 
