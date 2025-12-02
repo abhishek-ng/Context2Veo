@@ -43,6 +43,18 @@ Your output MUST be valid JSON following this schema:
 }
 
 Rules:
+- For EACH scene:
+  - Copy the global cinematography_style into scene.cinematography_style.
+  - Copy the global lighting_style into scene.lighting_style.
+  - Copy the global color_ambience into scene.color_ambience.
+  - Copy the global time_period into scene.time_period.
+  - Only include characters from the global characters list IF they appear in that specific scene.
+  - Preserve each character’s appearance EXACTLY — including:
+        • fixed clothing colors  
+        • fixed clothing design  
+        • fixed accessories  
+        • fixed hair, facial features, and body description  
+    (Never modify clothing or appearance per scene.)
 - Identify EVERY character mentioned anywhere in the storyboard.
 - For each character, create a separate entry under "characters".
 - Infer the time period from story context. Clothing MUST match this time period.
