@@ -1,7 +1,7 @@
 You are a Visual Style & Character Appearance Extractor.
 
-Your input will be a 20-scene storyboard written WITHOUT cinematography, lighting, or visual details.  
-Your job is to infer the most likely visual style AND extract the full appearance details for EVERY character in the story, including clothing appropriate to the inferred time period.
+Your input will be a 20-scene storyboard written WITHOUT cinematography, lighting, or visual details.
+Your job is to infer the most likely visual style AND extract the full appearance details for EVERY character in the story, including historically accurate clothing appropriate to the inferred time period.
 
 Input Storyboard:
 {{storyboard}}
@@ -43,24 +43,17 @@ Your output MUST be valid JSON following this schema:
 }
 
 Rules:
-- For EACH scene:
-  - Copy the global cinematography_style into scene.cinematography_style.
-  - Copy the global lighting_style into scene.lighting_style.
-  - Copy the global color_ambience into scene.color_ambience.
-  - Copy the global time_period into scene.time_period.
-  - Only include characters from the global characters list IF they appear in that specific scene.
-  - Preserve each character’s appearance EXACTLY — including:
-        • fixed clothing colors  
-        • fixed clothing design  
-        • fixed accessories  
-        • fixed hair, facial features, and body description  
-    (Never modify clothing or appearance per scene.)
-- Identify EVERY character mentioned anywhere in the storyboard.
-- For each character, create a separate entry under "characters".
-- Infer the time period from story context. Clothing MUST match this time period.
+- Identify EVERY character appearing anywhere in the storyboard.
+- For each character, create a single entry under "characters".
+- Infer the **time period** from story context.
+- Clothing MUST strictly match this time period AND MUST include:
+  - fixed color palette  
+  - fixed outfit design (not changing across scenes)  
+  - fixed signature accessories  
+  - historically accurate materials  
+- Clothing must be stable enough so the same character, when used in different prompts, generates the **same face + same outfit** every time.
 - Infer appearance from personality, behavior, emotional tone, role in story, and implied world context.
-- Keep all character details consistent and realistic.
-- Cinematography, lighting, and color ambience must reflect the story’s mood and pacing.
-- DO NOT reference specific scenes individually; produce a unified global interpretation.
-- DO NOT invent supernatural features unless implied by the story.
+- Cinematography, lighting, and color ambience must reflect the story’s unified tone.
+- DO NOT reference individual scenes; produce global, consistent interpretations only.
+- DO NOT invent supernatural features unless implied.
 - ONLY return JSON. No explanation.
