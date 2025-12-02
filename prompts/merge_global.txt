@@ -5,8 +5,9 @@ Your task is to take:
 2. PER-SCENE FEATURES (from extract_shot_features.txt)
 
 And merge them into a unified, consistent cinematic JSON output where:
-- EACH scene contains ALL global features inside itself.
+- EACH scene contains ALL global visual style elements inside itself.
 - NO separate global section exists.
+- ONLY the characters that appear in that specific scene should be included in its "characters" array.
 
 GLOBAL FEATURES:
 {{global}}
@@ -20,6 +21,7 @@ Your output MUST be valid JSON in the following structure:
   "scenes": [
     {
       "scene_id": 1,
+      "time_period": "",
       "action": "",
       "subject": "",
       "behavior": "",
@@ -42,7 +44,8 @@ MERGE RULES:
   - Copy the global cinematography_style into scene.cinematography_style.
   - Copy the global lighting_style into scene.lighting_style.
   - Copy the global color_ambience into scene.color_ambience.
-  - Copy the full global characters array into scene.characters.
+  - Copy the global time_period into scene.time_period.
+  - Add ONLY those characters from the global characters array who appear in that specific scene (based on SCENE FEATURES).
 
 - Do not modify, shorten, simplify, or reinterpret global features.
 - Do not add extra fields beyond those listed.
